@@ -1,0 +1,113 @@
+name: CI + Deploy
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Tests (engine)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          check-latest: true
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+      - name: Run engine tests
+        run: go test ./internal/...
+
+  build-and-deploy:
+    name: Build & Deploy to Pages
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          check-latest: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+
+      - name: Install templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Generate templ Go files
+        run: templ generate
+
+      - name: Generate Tailwind @source globs
+        run: |
+          TEMPLUI_PATH=$(go list -m -f '{{.Dir}}' github.com/templui/templui)
+          printf '@source "../../**/*.templ";\n@source "%s/components/**/*.templ";\n' "$TEMPLUI_PATH" > assets/css/sources.generated.css
+
+      - name: Render dist/index.html
+        run: go run ./cmd/gen dist/index.html
+
+      - name: Compile dist/app.css
+        run: npx @tailwindcss/cli -i assets/css/input.css -o dist/app.css --minify
+
+      - name: Build dist/main.wasm
+        run: |
+          GOOS=js GOARCH=wasm go build -ldflags "-s -w" -trimpath -o dist/main.wasm ./web
+          cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" dist/wasm_exec.js
+
+      - name: Copy fonts and vendored JS
+        run: |
+          mkdir -p dist/assets/fonts
+          cp assets/fonts/*.woff2 dist/assets/fonts/
+          cp node_modules/fireworks-js/dist/index.umd.js dist/fireworks.js
+
+      - name: Bundle standalone.html
+        run: go run ./cmd/bundle
+
+      - name: Configure GitHub Pages (auto-enable)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
