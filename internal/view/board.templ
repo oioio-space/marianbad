@@ -1,0 +1,132 @@
+package view
+
+import (
+	"fmt"
+
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/card"
+)
+
+templ ModeSelector() {
+	<section id="mode-selector" class="">
+		@card.Card() {
+			@card.Header() {
+				@card.Title() {
+					Marienbad
+				}
+				@card.Description() {
+					Variante misère du jeu de Nim — qui prend la dernière carte perd.
+				}
+			}
+			@card.Content() {
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
+					@button.Button(button.Props{
+						ID: "mode-vsai",
+						Variant: button.VariantDefault,
+						Size: button.SizeLg,
+						FullWidth: true,
+						Class: "h-20 text-base",
+					}) {
+						Contre l'ordinateur
+					}
+					@button.Button(button.Props{
+						ID: "mode-2p",
+						Variant: button.VariantOutline,
+						Size: button.SizeLg,
+						FullWidth: true,
+						Class: "h-20 text-base",
+					}) {
+						Deux joueurs
+					}
+				</div>
+				<p class="mt-8 text-sm text-muted-foreground text-center max-w-prose mx-auto">
+					Plateau de 3 rangées (7, 5, 3 cartes). À chaque tour, retire 1 à plusieurs cartes
+					d'<strong>une seule</strong> rangée. Le joueur qui prend la dernière carte perd la partie.
+				</p>
+			}
+		}
+	</section>
+}
+
+templ GameView() {
+	<section id="game-view" class="hidden">
+		@card.Card() {
+			@card.Header() {
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div class="text-sm font-medium" id="score-display">—</div>
+					<div class="flex gap-1">
+						@button.Button(button.Props{
+							ID: "btn-reset-score",
+							Variant: button.VariantGhost,
+							Size: button.SizeSm,
+							Attributes: templ.Attributes{"title": "Réinitialiser le score du mode courant"},
+						}) {
+							Reset score
+						}
+						@button.Button(button.Props{
+							ID: "btn-change-mode",
+							Variant: button.VariantGhost,
+							Size: button.SizeSm,
+						}) {
+							Changer de mode
+						}
+						@button.Button(button.Props{
+							ID: "btn-restart",
+							Variant: button.VariantSecondary,
+							Size: button.SizeSm,
+						}) {
+							Nouvelle partie
+						}
+					</div>
+				</div>
+			}
+			@card.Content() {
+				<div id="status" class="text-center text-base font-medium py-3 min-h-[1.5em] mb-4" aria-live="polite">…</div>
+
+				<div id="board" class="flex flex-col gap-4 items-start px-4 py-8 bg-muted rounded-lg border border-border">
+					@row(0, 7)
+					@row(1, 5)
+					@row(2, 3)
+				</div>
+
+				<div class="flex justify-center gap-2 mt-6">
+					@button.Button(button.Props{
+						ID: "btn-cancel",
+						Variant: button.VariantOutline,
+						Disabled: true,
+					}) {
+						Annuler
+					}
+					@button.Button(button.Props{
+						ID: "btn-validate",
+						Variant: button.VariantDefault,
+						Disabled: true,
+					}) {
+						Valider
+					}
+				</div>
+
+				<p class="text-center text-xs text-muted-foreground mt-5">
+					Clique sur une carte : toutes les cartes à sa droite dans la rangée seront sélectionnées.
+				</p>
+			}
+		}
+	</section>
+}
+
+templ row(idx int, n int) {
+	<div class="row flex gap-2 justify-start transition-transform" data-row={ fmt.Sprint(idx) }>
+		for i := 0; i < n; i++ {
+			@cardSlot(idx, i)
+		}
+	</div>
+}
+
+templ cardSlot(row int, idx int) {
+	<button
+		class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+		data-row={ fmt.Sprint(row) }
+		data-idx={ fmt.Sprint(idx) }
+		aria-label={ fmt.Sprintf("Rangée %d, carte %d", row+1, idx+1) }
+	></button>
+}

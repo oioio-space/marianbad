@@ -1,0 +1,99 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Marienbad</title><link rel="stylesheet" href="app.css"></head><body class="min-h-screen bg-background text-foreground antialiased font-sans"><noscript><p class="m-4 p-3 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-center">Ce jeu nécessite JavaScript et WebAssembly.</p></noscript><div id="wasm-error" class="hidden m-4 p-3 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-center text-sm"></div><main class="max-w-3xl mx-auto px-6 py-12"><section id="mode-selector" class=""><div class="bg-card text-card-foreground shadow-xs rounded-lg border w-full"><div class="pb-0 flex flex-col space-y-1.5 p-6"><h3 class="text-lg leading-none font-semibold tracking-tight">Marienbad</h3> <p class="text-sm text-muted-foreground">Variante misère du jeu de Nim — qui prend la dernière carte perd.</p></div> <div class="p-6"><div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto"><button id="mode-vsai" class="font-medium dark:aria-invalid:ring-destructive/40 w-full inline-flex items-center transition-all rounded-md disabled:pointer-events-none aria-invalid:ring-destructive/20 px-6 shadow-xs h-20 cursor-pointer outline-none has-[&gt;svg]:px-4 [&amp;_svg:not([class*=&#39;size-&#39;])]:size-4 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 justify-center whitespace-nowrap shrink-0 text-primary-foreground gap-2 text-base aria-invalid:border-destructive disabled:opacity-50 hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] bg-primary" type="button">Contre l'ordinateur</button><button id="mode-2p" class="text-base px-6 [&amp;_svg]:pointer-events-none aria-invalid:ring-destructive/20 dark:bg-input/30 shrink-0 focus-visible:ring-ring/50 hover:text-accent-foreground w-full justify-center h-20 disabled:opacity-50 dark:border-input [&amp;_svg:not([class*=&#39;size-&#39;])]:size-4 disabled:pointer-events-none cursor-pointer bg-background transition-all [&amp;_svg]:shrink-0 inline-flex rounded-md focus-visible:ring-[3px] dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border dark:hover:bg-input/50 has-[&gt;svg]:px-4 gap-2 whitespace-nowrap focus-visible:border-ring shadow-xs items-center outline-none hover:bg-accent font-medium" type="button">Deux joueurs</button></div><p class="mt-8 text-sm text-muted-foreground text-center max-w-prose mx-auto">Plateau de 3 rangées (7, 5, 3 cartes). À chaque tour, retire 1 à plusieurs cartes d'<strong>une seule</strong> rangée. Le joueur qui prend la dernière carte perd la partie.</p></div></div></section><section id="game-view" class="hidden"><div class="bg-card text-card-foreground shadow-xs rounded-lg border w-full"><div class="pb-0 flex flex-col space-y-1.5 p-6"><div class="flex flex-wrap items-center justify-between gap-3"><div class="text-sm font-medium" id="score-display">—</div><div class="flex gap-1"><button id="btn-reset-score" class="whitespace-nowrap transition-all focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 inline-flex shrink-0 aria-invalid:border-destructive cursor-pointer hover:text-accent-foreground items-center rounded-md text-sm [&amp;_svg]:pointer-events-none outline-none dark:hover:bg-accent/50 font-medium [&amp;_svg:not([class*=&#39;size-&#39;])]:size-4 dark:aria-invalid:ring-destructive/40 px-3 focus-visible:border-ring h-8 has-[&gt;svg]:px-2.5 focus-visible:ring-[3px] hover:bg-accent disabled:pointer-events-none disabled:opacity-50 gap-1.5 [&amp;_svg]:shrink-0 justify-center" type="button" title="Réinitialiser le score du mode courant">Reset score</button><button id="btn-change-mode" class="whitespace-nowrap transition-all focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 inline-flex shrink-0 aria-invalid:border-destructive cursor-pointer hover:text-accent-foreground items-center rounded-md text-sm [&amp;_svg]:pointer-events-none outline-none dark:hover:bg-accent/50 font-medium [&amp;_svg:not([class*=&#39;size-&#39;])]:size-4 dark:aria-invalid:ring-destructive/40 px-3 focus-visible:border-ring h-8 has-[&gt;svg]:px-2.5 focus-visible:ring-[3px] hover:bg-accent disabled:pointer-events-none disabled:opacity-50 gap-1.5 [&amp;_svg]:shrink-0 justify-center" type="button">Changer de mode</button><button id="btn-restart" class="inline-flex focus-visible:ring-[3px] aria-invalid:ring-destructive/20 disabled:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 bg-secondary whitespace-nowrap aria-invalid:border-destructive cursor-pointer hover:bg-secondary/80 px-3 font-medium text-secondary-foreground shrink-0 [&amp;_svg]:pointer-events-none transition-all [&amp;_svg:not([class*=&#39;size-&#39;])]:size-4 outline-none h-8 shadow-xs justify-center items-center dark:aria-invalid:ring-destructive/40 has-[&gt;svg]:px-2.5 gap-1.5 [&amp;_svg]:shrink-0 rounded-md text-sm disabled:opacity-50" type="button">Nouvelle partie</button></div></div></div> <div class="p-6"><div id="status" class="text-center text-base font-medium py-3 min-h-[1.5em] mb-4" aria-live="polite">…</div><div id="board" class="flex flex-col gap-4 items-start px-4 py-8 bg-muted rounded-lg border border-border"><div class="row flex gap-2 justify-start transition-transform" data-row="0"><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="0" data-idx="0" aria-label="Rangée 1, carte 1"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="0" data-idx="1" aria-label="Rangée 1, carte 2"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="0" data-idx="2" aria-label="Rangée 1, carte 3"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="0" data-idx="3" aria-label="Rangée 1, carte 4"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="0" data-idx="4" aria-label="Rangée 1, carte 5"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="0" data-idx="5" aria-label="Rangée 1, carte 6"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="0" data-idx="6" aria-label="Rangée 1, carte 7"></button></div><div class="row flex gap-2 justify-start transition-transform" data-row="1"><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="1" data-idx="0" aria-label="Rangée 2, carte 1"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="1" data-idx="1" aria-label="Rangée 2, carte 2"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="1" data-idx="2" aria-label="Rangée 2, carte 3"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="1" data-idx="3" aria-label="Rangée 2, carte 4"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="1" data-idx="4" aria-label="Rangée 2, carte 5"></button></div><div class="row flex gap-2 justify-start transition-transform" data-row="2"><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="2" data-idx="0" aria-label="Rangée 3, carte 1"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="2" data-idx="1" aria-label="Rangée 3, carte 2"></button><button class="card back relative w-[62px] h-[88px] rounded-md border bg-primary cursor-pointer transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-row="2" data-idx="2" aria-label="Rangée 3, carte 3"></button></div></div><div class="flex justify-center gap-2 mt-6"><button id="btn-cancel" class="items-center whitespace-nowrap shadow-xs border hover:text-accent-foreground px-4 has-[&gt;svg]:px-3 dark:border-input hover:bg-accent py-2 [&amp;_svg]:pointer-events-none font-medium focus-visible:border-ring justify-center disabled:pointer-events-none outline-none aria-invalid:border-destructive h-9 rounded-md dark:aria-invalid:ring-destructive/40 disabled:opacity-50 focus-visible:ring-ring/50 dark:bg-input/30 [&amp;_svg:not([class*=&#39;size-&#39;])]:size-4 cursor-pointer shrink-0 aria-invalid:ring-destructive/20 inline-flex focus-visible:ring-[3px] text-sm [&amp;_svg]:shrink-0 bg-background dark:hover:bg-input/50 gap-2 transition-all" type="button" disabled>Annuler</button><button id="btn-validate" class="shadow-xs rounded-md dark:aria-invalid:ring-destructive/40 disabled:pointer-events-none hover:bg-primary/90 whitespace-nowrap disabled:opacity-50 px-4 bg-primary inline-flex outline-none focus-visible:ring-ring/50 cursor-pointer items-center text-primary-foreground py-2 h-9 [&amp;_svg]:pointer-events-none aria-invalid:border-destructive transition-all shrink-0 aria-invalid:ring-destructive/20 gap-2 font-medium [&amp;_svg:not([class*=&#39;size-&#39;])]:size-4 [&amp;_svg]:shrink-0 has-[&gt;svg]:px-3 text-sm focus-visible:border-ring focus-visible:ring-[3px] justify-center" type="button" disabled>Valider</button></div><p class="text-center text-xs text-muted-foreground mt-5">Clique sur une carte : toutes les cartes à sa droite dans la rangée seront sélectionnées.</p></div></div></section><footer class="mt-12 text-center text-xs text-muted-foreground">Go + WebAssembly · hors ligne · variante misère</footer></main><!-- Fireworks canvas (overlay, only visible on victory) --><div id="fireworks-overlay" class="fixed inset-0 pointer-events-none hidden z-50" aria-hidden="true"></div><!-- Game-over overlay (loss against AI) --><div id="gameover-overlay" class="game-over-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="gameover-text"><div class="game-over-stage"><h1 id="gameover-text" class="retro-text">GAME OVER</h1><p id="gameover-sub" class="game-over-sub">L'ordinateur t'a battu.</p><div class="flex justify-center gap-2 mt-8"><button id="gameover-close" class="inline-flex items-center justify-center h-9 px-4 rounded-md border border-border text-sm font-medium bg-card text-foreground hover:bg-muted cursor-pointer transition-colors">Fermer</button> <button id="gameover-replay" class="inline-flex items-center justify-center h-9 px-4 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 cursor-pointer transition-opacity">Rejouer</button></div></div></div><!-- Victory modal (no backdrop — fireworks behind must remain visible) --><div id="victory-modal" class="fixed inset-0 hidden z-[60] flex items-center justify-center pointer-events-none" role="dialog" aria-modal="true" aria-labelledby="victory-title"><div class="bg-card border border-border rounded-xl shadow-2xl p-8 max-w-md mx-4 text-center pointer-events-auto"><div class="text-5xl mb-4" aria-hidden="true">🎉</div><h2 id="victory-title" class="text-2xl font-semibold mb-2">Victoire !</h2><p id="victory-message" class="text-muted-foreground mb-6">…</p><div class="flex justify-center gap-2"><button id="victory-close" class="inline-flex items-center justify-center h-9 px-4 rounded-md border border-border text-sm font-medium bg-transparent hover:bg-muted cursor-pointer">Fermer</button> <button id="victory-replay" class="inline-flex items-center justify-center h-9 px-4 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 cursor-pointer">Rejouer</button></div></div></div><script src="fireworks.js"></script><script>
+		(function () {
+			var fw = null;
+			var overlay = document.getElementById("fireworks-overlay");
+			var modal = document.getElementById("victory-modal");
+			var titleEl = document.getElementById("victory-title");
+			var msgEl = document.getElementById("victory-message");
+
+			function stop() {
+				if (fw) { try { fw.stop(); } catch (e) {} fw = null; }
+				overlay.classList.add("hidden");
+				modal.classList.add("hidden");
+			}
+
+			window.marianbadCelebrate = function (title, message) {
+				titleEl.textContent = title || "Victoire !";
+				msgEl.textContent = message || "";
+				overlay.classList.remove("hidden");
+				modal.classList.remove("hidden");
+
+				// Resolve which constructor the UMD bundle exposes.
+				var FW = (window.Fireworks && window.Fireworks.Fireworks)
+					|| window.Fireworks
+					|| null;
+				if (!FW) {
+					console.warn("fireworks-js library not loaded");
+					return;
+				}
+
+				// Defer to next animation frame so the overlay has a real
+				// layout size before Fireworks reads container.clientWidth.
+				requestAnimationFrame(function () {
+					try {
+						fw = new FW(overlay, {
+							hue: { min: 0, max: 360 },
+							acceleration: 1.02,
+							intensity: 28,
+							explosion: 7,
+							particles: 90,
+							traceSpeed: 12,
+							delay: { min: 22, max: 38 },
+							opacity: 0.4,
+							sound: { enabled: false }
+						});
+						fw.start();
+						setTimeout(function () {
+							if (fw) { try { fw.stop(); } catch (e) {} }
+							overlay.classList.add("hidden");
+						}, 7000);
+					} catch (e) {
+						console.warn("fireworks failed:", e);
+					}
+				});
+			};
+
+			window.marianbadHideVictory = stop;
+
+			document.getElementById("victory-close").addEventListener("click", stop);
+			document.getElementById("victory-replay").addEventListener("click", function () {
+				stop();
+				var btn = document.getElementById("btn-restart");
+				if (btn) btn.click();
+			});
+
+			// --- Game Over overlay (loss) ---
+			var go = document.getElementById("gameover-overlay");
+			var goSub = document.getElementById("gameover-sub");
+			function hideGameOver() { go.classList.add("hidden"); }
+			window.marianbadGameOver = function (subtitle) {
+				goSub.textContent = subtitle || "L'ordinateur t'a battu.";
+				go.classList.remove("hidden");
+			};
+			window.marianbadHideGameOver = hideGameOver;
+			document.getElementById("gameover-close").addEventListener("click", hideGameOver);
+			document.getElementById("gameover-replay").addEventListener("click", function () {
+				hideGameOver();
+				var btn = document.getElementById("btn-restart");
+				if (btn) btn.click();
+			});
+		})();
+		</script><script src="wasm_exec.js"></script><script>
+			(function () {
+				if (typeof WebAssembly === "undefined" || typeof Go === "undefined") {
+					document.getElementById("wasm-error").classList.remove("hidden");
+					document.getElementById("wasm-error").textContent = "WebAssembly indisponible.";
+					return;
+				}
+				const go = new Go();
+				const load = WebAssembly.instantiateStreaming
+					? WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject)
+					: fetch("main.wasm").then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, go.importObject));
+				load.then(r => go.run(r.instance)).catch(err => {
+					console.error("WASM load failed:", err);
+					const el = document.getElementById("wasm-error");
+					el.textContent = "Erreur de chargement : " + err.message;
+					el.classList.remove("hidden");
+				});
+			})();
+		</script></body></html>

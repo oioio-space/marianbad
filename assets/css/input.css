@@ -1,0 +1,272 @@
+@font-face {
+    font-family: "Geist";
+    src: url("../fonts/geist-variable.woff2") format("woff2-variations");
+    font-weight: 100 900;
+    font-display: optional;
+}
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../fonts/geist-mono-variable.woff2") format("woff2-variations");
+    font-weight: 100 900;
+    font-display: optional;
+}
+@font-face {
+    font-family: "Press Start 2P";
+    src: url("../fonts/press-start-2p.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+}
+
+@import "tailwindcss";
+@import "./sources.generated.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+    --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, monospace;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+}
+
+:root {
+    --radius: 0.65rem;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.141 0.005 285.823);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.141 0.005 285.823);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.141 0.005 285.823);
+    --primary: oklch(58.6% 0.253 17.585);
+    --primary-foreground: oklch(0.969 0.015 12.422);
+    --secondary: oklch(0.967 0.001 286.375);
+    --secondary-foreground: oklch(0.21 0.006 285.885);
+    --muted: oklch(0.967 0.001 286.375);
+    --muted-foreground: oklch(0.552 0.016 285.938);
+    --accent: oklch(0.967 0.001 286.375);
+    --accent-foreground: oklch(0.21 0.006 285.885);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.92 0.004 286.32);
+    --input: oklch(0.92 0.004 286.32);
+    --ring: oklch(0.645 0.246 16.439);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: oklch(0.141 0.005 285.823);
+        --foreground: oklch(0.985 0 0);
+        --card: oklch(0.21 0.006 285.885);
+        --card-foreground: oklch(0.985 0 0);
+        --primary: oklch(0.645 0.246 16.439);
+        --primary-foreground: oklch(0.969 0.015 12.422);
+        --secondary: oklch(0.274 0.006 286.033);
+        --secondary-foreground: oklch(0.985 0 0);
+        --muted: oklch(0.274 0.006 286.033);
+        --muted-foreground: oklch(0.712 0.013 286.067);
+        --accent: oklch(0.274 0.006 286.033);
+        --accent-foreground: oklch(0.985 0 0);
+        --border: oklch(1 0 0 / 10%);
+        --input: oklch(1 0 0 / 15%);
+        --ring: oklch(0.645 0.246 16.439);
+    }
+}
+
+/* --------- Subtle retro grid background on the main app --------- */
+
+body {
+    background-image:
+        linear-gradient(
+            color-mix(in srgb, var(--foreground) 6%, transparent) 1px,
+            transparent 1px),
+        linear-gradient(90deg,
+            color-mix(in srgb, var(--foreground) 6%, transparent) 1px,
+            transparent 1px);
+    background-size: 24px 24px;
+    background-attachment: fixed;
+}
+
+/* --------- Marienbad-specific runtime classes (toggled by WASM) --------- */
+
+.card.back::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px solid oklch(1 0 0 / 0.25);
+    border-radius: calc(var(--radius-md) - 3px);
+    pointer-events: none;
+}
+
+.card.back::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 28%;
+    height: 28%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    background: oklch(1 0 0 / 0.18);
+    border-radius: 2px;
+}
+
+.card:hover:not(:disabled):not(.is-disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px oklch(0 0 0 / 0.1), 0 2px 4px -2px oklch(0 0 0 / 0.1);
+}
+
+.card.selected {
+    transform: translateY(-10px);
+    box-shadow:
+        0 10px 15px -3px oklch(0 0 0 / 0.1),
+        0 0 0 2px var(--background),
+        0 0 0 4px var(--ring);
+}
+
+.card.removed {
+    opacity: 0;
+    transform: scale(0.5) rotate(10deg);
+    pointer-events: none;
+    box-shadow: none;
+}
+
+.board.ai-thinking { cursor: progress; }
+.board.ai-thinking .card { pointer-events: none; }
+
+.row.shake { animation: shake 0.32s ease; }
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-5px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+}
+
+@media (max-width: 600px) {
+    .card { width: 42px !important; height: 60px !important; }
+}
+
+/* ===================================================================
+   GAME OVER overlay (loss against AI).
+   Inspired by harshpreet_singh's CodePen MWNzjeg — retro 8-bit text
+   with layered shadows, rainbow tilt, scanlines, grid background.
+   Adapted to coexist with the rest of the UI (scoped, not body-wide).
+   =================================================================== */
+
+.game-over-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #2c2c2c;
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.25) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.25) 1px, transparent 1px);
+    background-size: 20px 20px;
+    overflow: hidden;
+}
+
+/* Hidden utility must win over our display:flex above. */
+.game-over-overlay.hidden { display: none; }
+
+/* Scanlines */
+.game-over-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+}
+
+.game-over-stage {
+    perspective: 500px;
+    text-align: center;
+    z-index: 1;
+}
+
+.retro-text {
+    font-family: "Press Start 2P", ui-monospace, "Consolas", "Courier New", monospace;
+    font-size: clamp(2rem, 7vw, 4rem);
+    margin: 0;
+    position: relative;
+    color: #ff0;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transform-style: preserve-3d;
+    text-shadow:
+        0 0 #ffd700,
+        -1px -1px #ff4500,
+        -2px -2px #ff6347,
+        -3px -3px #ff7f50,
+        -4px -4px #ff8c00,
+        -5px -5px #ffa500,
+        -6px -6px #ffb6c1,
+        -7px -7px #ffc0cb,
+        -8px -8px #ff69b4,
+        -9px -9px #ff1493,
+        -10px -10px #ff00ff;
+    animation: gameover-rainbow 2s ease-in-out infinite;
+}
+
+.retro-text::before {
+    content: "GAME OVER";
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: rgba(255, 255, 255, 0.06);
+    text-shadow: none;
+    transform: translateZ(-100px);
+}
+
+@keyframes gameover-rainbow {
+    0%, 100% { transform: rotateX(0deg) rotateY(0deg); }
+    25% { transform: rotateX(2deg) rotateY(2deg); }
+    75% { transform: rotateX(-2deg) rotateY(-2deg); }
+}
+
+@keyframes gameover-glitch {
+    0%   { text-shadow: 2px 2px #ff0000, -2px -2px #00ff00; }
+    25%  { text-shadow: -2px 2px #ff00ff, 2px -2px #00ffff; }
+    50%  { text-shadow: 2px -2px #ffff00, -2px 2px #0000ff; }
+    75%  { text-shadow: -2px -2px #ff0000, 2px 2px #00ff00; }
+    100% { text-shadow: 2px 2px #ff0000, -2px -2px #00ff00; }
+}
+
+.retro-text:hover {
+    animation: gameover-glitch 0.2s ease infinite;
+}
+
+.game-over-sub {
+    margin-top: 2.5rem;
+    color: #d8d8d8;
+    font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    letter-spacing: 0.02em;
+}
