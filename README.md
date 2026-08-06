@@ -2,6 +2,8 @@
 
 Le jeu de Nim (variante misère, plateau 7-5-3) en Go + WebAssembly.
 
+**▶️ Jouer en ligne : https://oioio-space.github.io/marianbad/**
+
 - **Modes** : contre l'ordinateur, ou 2 joueurs locaux sur le même appareil.
 - **IA** : optimale (Nim-sum), avec heuristique « tricky » quand elle est en
   position perdante — elle joue toujours jusqu'au bout.
